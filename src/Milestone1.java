@@ -30,8 +30,8 @@ class Inventory {
         Comparator<Item> comparator = null;
 
         switch (sortBy) {
-            case DateEntered -> comparator = Comparator.comparing((Item o) -> o.dateEntered());
-            case Brand -> comparator = Comparator.comparing((Item o) -> o.brand());
+            case DateEntered -> comparator = Comparator.comparing((Item o) -> o.dateEntered);
+            case Brand -> comparator = Comparator.comparing((Item o) -> o.brand);
         }
 
         var result = BubbleSort.sort((LinkedList<Item>) items.clone(), comparator);
