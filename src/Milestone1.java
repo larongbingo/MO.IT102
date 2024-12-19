@@ -1,4 +1,7 @@
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -7,11 +10,11 @@ import java.util.LinkedList;
 public class Milestone1 {
     public static void main(String[] args) {
         var items = new Inventory();
-        items.add(new Item(new Date(2021, Calendar.DECEMBER, 1), StockLabel.New, "ABCTesting", "123", true));
-        items.add(new Item(new Date(2020, Calendar.DECEMBER, 1), StockLabel.New, "BCDTesting", "123", true));
-        items.add(new Item(new Date(2019, Calendar.DECEMBER, 1), StockLabel.New, "CDETesting", "123", true));
+        items.add(new Item(LocalDate.ofYearDay(2021, 31), StockLabel.New, "ABCTesting", "123", Status.Sold));
+        items.add(new Item(LocalDate.ofYearDay(2020, 31), StockLabel.Old, "BCDTesting", "123", Status.Sold));
+        items.add(new Item(LocalDate.ofYearDay(2019, 31), StockLabel.New, "CDETesting", "123", Status.OnHand));
 
-        var result = items.sortBy(SortBy.Brand);
+        var result = items.sortBy(SortBy.DateEntered);
         System.out.println(result);
     }
 }
@@ -58,18 +61,15 @@ class BubbleSort {
 }
 
 // https://docs.google.com/spreadsheets/d/1ShE6rwq4VydxXPcIlTVEkQ5k94IW_1RvHBoQVQa-9s8/edit?gid=0#gid=0
-record Item(Date dateEntered, StockLabel stockLabel, String brand, String engineNumber, boolean isOnHand) {
-    // @isOnHand True - On Hand; False - Sold
+record Item(LocalDate dateEntered, StockLabel stockLabel, String brand, String engineNumber, Status status) {
     @Override
     public String toString() {
-        var dateFormat = new SimpleDateFormat("MM-dd-yyyy");
-
         return "Item{" +
-                "dateEntered=" + dateFormat.format(dateEntered) +
+                "dateEntered=" + dateEntered.format(DateTimeFormatter.ofPattern("MM-dd-yyyy")) +
                 ", stockLabel=" + stockLabel +
                 ", brand='" + brand + '\'' +
                 ", engineNumber='" + engineNumber + '\'' +
-                ", isOnHand=" + isOnHand +
+                ", isOnHand=" + status +
                 '}';
     }
 }
@@ -81,4 +81,8 @@ enum SortBy {
 
 enum StockLabel {
     Old, New
+}
+
+enum Status {
+    Sold, OnHand
 }
