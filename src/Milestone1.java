@@ -1,10 +1,6 @@
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.LinkedList;
 
 public class Milestone1 {
@@ -61,7 +57,21 @@ class BubbleSort {
 }
 
 // https://docs.google.com/spreadsheets/d/1ShE6rwq4VydxXPcIlTVEkQ5k94IW_1RvHBoQVQa-9s8/edit?gid=0#gid=0
-record Item(LocalDate dateEntered, StockLabel stockLabel, String brand, String engineNumber, Status status) {
+class Item {
+    public Item(LocalDate dateEntered, StockLabel stockLabel, String brand, String engineNumber, Status status) {
+        this.dateEntered = dateEntered;
+        this.stockLabel = stockLabel;
+        this.brand = brand;
+        this.engineNumber = engineNumber;
+        this.status = status;
+    }
+
+    public LocalDate dateEntered;
+    public StockLabel stockLabel;
+    public String brand;
+    public String engineNumber;
+    public Status status;
+
     @Override
     public String toString() {
         return "Item{" +
