@@ -55,10 +55,9 @@ class Inventory {
             while (scanner.hasNext()) {
                 var values = scanner.next();
                 var splitValues = values.split(",");
-                var stockLabel = StockLabel.parse(splitValues[1]);
                 var item = new Item(
                         LocalDate.parse(splitValues[0], dateFormatter),
-                        stockLabel,
+                        StockLabel.parse(splitValues[1]),
                         splitValues[2],
                         splitValues[3],
                         Status.parse(splitValues[4]));
