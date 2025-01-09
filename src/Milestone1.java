@@ -1,16 +1,21 @@
+import java.io.File;
+import java.security.InvalidParameterException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.Locale;
+import java.util.Scanner;
 
 public class Milestone1 {
     public static void main(String[] args) {
         var items = new Inventory();
+        items.safelyLoadData();
         items.add(new Item(LocalDate.ofYearDay(2021, 31), StockLabel.New, "ABCTesting", "123", Status.Sold));
         items.add(new Item(LocalDate.ofYearDay(2020, 31), StockLabel.Old, "BCDTesting", "123", Status.Sold));
         items.add(new Item(LocalDate.ofYearDay(2019, 31), StockLabel.New, "CDETesting", "123", Status.OnHand));
 
-        var result = items.sortBy(SortBy.DateEntered);
+        var result = items.sortBy(SortBy.Brand);
         System.out.println(result);
     }
 }
@@ -37,6 +42,35 @@ class Inventory {
         var result = BubbleSort.sort((LinkedList<Item>) items.clone(), comparator);
 
         return result;
+    }
+
+    public LinkedList<Item> sortBy() {
+        return this.sortBy(SortBy.Brand);
+    }
+
+    public void safelyLoadData()
+    {
+        var dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy", Locale.US);
+        try (var scanner = new Scanner(new File("MotorPH_Inventory_Data.csv"))) {
+            while (scanner.hasNext()) {
+                var values = scanner.next();
+                var splitValues = values.split(",");
+                var stockLabel = StockLabel.parse(splitValues[1]);
+                var item = new Item(
+                        LocalDate.parse(splitValues[0], dateFormatter),
+                        stockLabel,
+                        splitValues[2],
+                        splitValues[3],
+                        Status.parse(splitValues[4]));
+                items.add(item);
+            }
+
+            System.out.println("Successfully loaded all data");
+
+        }
+        catch (Exception e) {
+            System.out.println("An exception occurred while loading data: " + e.toString());
+        }
     }
 }
 
@@ -90,9 +124,33 @@ enum SortBy {
 }
 
 enum StockLabel {
-    Old, New
+    Old, New;
+
+    public static StockLabel parse(String val) throws InvalidParameterException {
+        if (val.equalsIgnoreCase("old")) {
+            return StockLabel.Old;
+        }
+        else if (val.equalsIgnoreCase("new")) {
+            return StockLabel.New;
+        }
+        else {
+            throw new InvalidParameterException();
+        }
+    }
 }
 
 enum Status {
-    Sold, OnHand
+    Sold, OnHand;
+
+    public static Status parse(String val) throws InvalidParameterException {
+        if (val.equalsIgnoreCase("sold")) {
+            return Status.Sold;
+        }
+        else if (val.equalsIgnoreCase("on-hand")) {
+            return Status.OnHand;
+        }
+        else {
+            throw new InvalidParameterException();
+        }
+    }
 }
