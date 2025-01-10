@@ -8,15 +8,60 @@ import java.util.Locale;
 import java.util.Scanner;
 
 public class Milestone1 {
-    public static void main(String[] args) {
-        var items = new Inventory();
-        items.safelyLoadData();
-        items.add(new Item(LocalDate.ofYearDay(2021, 31), StockLabel.New, "ABCTesting", "123", Status.Sold));
-        items.add(new Item(LocalDate.ofYearDay(2020, 31), StockLabel.Old, "BCDTesting", "123", Status.Sold));
-        items.add(new Item(LocalDate.ofYearDay(2019, 31), StockLabel.New, "CDETesting", "123", Status.OnHand));
+    private static Scanner scanner = new Scanner(System.in);
+    private static Inventory items = new Inventory();
 
-        var result = items.sortBy(SortBy.Brand);
-        System.out.println(result);
+    public static void main(String[] args) {
+        items.safelyLoadData();
+        
+        while (true) {
+            System.out.print("Enter command {Add, Remove, Update, SortByBrand, SortByDate, Quit}: ");
+            var command = scanner.next();
+            command = command.toLowerCase();
+
+            switch (command) {
+                case "add": 
+                    addItemProc(); 
+                    break;
+                case "quit":
+                    System.out.println("[INVENTORY] Exiting");
+                    return;
+                default:
+                    System.out.println("[INVENTORY] Invalid Command");
+            }
+        }
+    }
+
+    private static void addItemProc() {
+        try {
+            System.out.print("Name: ");
+            var name = scanner.next();
+
+            System.out.print("Engine Number: ");
+            var engineNumber = scanner.next();
+
+            System.out.print("Stock Label {New, Old}: ");
+            var stockLabel = scanner.next();
+            var parsedStockLabel = StockLabel.parse(stockLabel);
+
+            System.out.print("Status {OnHand, Sold}: ");
+            var status = scanner.next();
+            var parsedStatus = Status.parse(status);
+
+            var newItem = new Item(
+                LocalDate.now(),
+                parsedStockLabel,
+                name,
+                engineNumber,
+                parsedStatus
+            );
+
+            items.add(newItem);
+            System.out.println("[INVENTORY] Item Added " + newItem.toString());
+        }
+        catch(Exception ex) {
+            System.out.println("[INVENTORY] An error occurred: "  + ex.toString());
+        } 
     }
 }
 
@@ -86,6 +131,18 @@ class BubbleSort {
         }
 
         return a;
+    }
+}
+
+class LinearSearch {
+    public static Item findByEngineNumber(LinkedList<Item> a, String engineNumber) throws InvalidParameterException {
+        for (var item : a) {
+            if (item.engineNumber.equalsIgnoreCase(engineNumber)) {
+                return item;
+            }
+        }
+
+        throw new InvalidParameterException("EngineNumber of " + engineNumber + " does not exist");
     }
 }
 
