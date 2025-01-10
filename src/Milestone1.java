@@ -15,7 +15,7 @@ public class Milestone1 {
         items.safelyLoadData();
         
         while (true) {
-            System.out.print("Enter command {Add, Remove, Update, SortByBrand, SortByDate, Quit}: ");
+            System.out.print("Enter command {Add, Remove, Update, SortByBrand, SortByDate, Print, (Q)uit}: ");
             var command = scanner.next();
             command = command.toLowerCase();
 
@@ -23,12 +23,87 @@ public class Milestone1 {
                 case "add": 
                     addItemProc(); 
                     break;
+                case "remove":
+                    removeItemProc();
+                    break;
+                case "update":
+                    updateItemProc();
+                    break;
+                case "print":
+                    items.printList();
+                    break;
+                case "sortbybrand":
+                    items.sortBy(SortBy.Brand);
+                    items.printList();
+                    break;
+                case "sortbydate":
+                    items.sortBy(SortBy.DateEntered);
+                    items.printList();
+                    break;
                 case "quit":
+                case "q":
                     System.out.println("[INVENTORY] Exiting");
                     return;
                 default:
                     System.out.println("[INVENTORY] Invalid Command");
             }
+        }
+    }
+
+    private static void updateItemProc() {
+        try {
+            System.out.print("Enter Engine Number: ");
+            var engineNumber = scanner.next();
+
+            var itemToBeUpdated = LinearSearch.findByEngineNumber(items.items, engineNumber);
+
+            System.out.print(String.format("New Value for the Brand; Leave blank if current is ok - Current {%s} : ", itemToBeUpdated.brand));
+            var newBrand = scanner.next();
+            if (!newBrand.isEmpty()) {
+                itemToBeUpdated.brand = newBrand;
+            }
+
+            System.out.print(String.format("New Value for the Status {Sold, OnHand}; Leave blank if current is ok - Current {%s} : ", itemToBeUpdated.brand));
+            var newStatus = scanner.next();
+            if (!newStatus.isEmpty()) {
+                itemToBeUpdated.status = Status.parse(newStatus);
+            }
+
+            System.out.print(String.format("New Value for the StockLabel {New, Old}; Leave blank if current is ok - Current {%s} : ", itemToBeUpdated.brand));
+            var newStock = scanner.next();
+            if (!newStock.isEmpty()) {
+                itemToBeUpdated.stockLabel = StockLabel.parse(newStock);
+            }
+        }
+        catch (InvalidEngineNumberParameterException engineNumberExc) {
+            System.out.println("[INVENTORY] EngineNumber not found");
+        }
+        catch (InvalidStatusStringParameterException statusExc) {
+            System.out.println("[INVENTORY] Invalid input. The following are the only valid {OnHand, Sold}");
+        }
+        catch (InvalidStockLabelStringParameterException stockExc) {
+            System.out.println("[INVENTORY] Invalid input. The following are the only valid {Old, New}");
+        }
+    }
+
+    private static void removeItemProc() {
+        try {
+            System.out.print("Engine Number of the item to be removed: ");
+            var engineNumber = scanner.next();
+
+            var itemToBeRemoved = LinearSearch.findByEngineNumber(items.items, engineNumber);
+
+            var result = items.remove(itemToBeRemoved);
+
+            if (result) {
+                System.out.println("[INVENTORY] Item has been removed");
+            }
+            else {
+                System.out.println("[INVENTORY] Item has not been removed");
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Engine Number is not valid");
         }
     }
 
@@ -56,8 +131,13 @@ public class Milestone1 {
                 parsedStatus
             );
 
-            items.add(newItem);
-            System.out.println("[INVENTORY] Item Added " + newItem.toString());
+            var result = items.add(newItem);
+            if (result) {
+                System.out.println("[INVENTORY] Item Added " + newItem.toString());
+            }
+            else {
+                System.out.println("[INVENTORY] Engine Number already added used");
+            }
         }
         catch(Exception ex) {
             System.out.println("[INVENTORY] An error occurred: "  + ex.toString());
@@ -69,6 +149,10 @@ class Inventory {
     public LinkedList<Item> items = new LinkedList<>();
 
     public boolean add(Item item) {
+        if (LinearSearch.containsByEngineNumber(items, item.engineNumber)) {
+            return false;
+        }
+
         return items.add(item);
     }
 
@@ -84,13 +168,9 @@ class Inventory {
             case Brand -> comparator = Comparator.comparing((Item o) -> o.brand);
         }
 
-        var result = BubbleSort.sort((LinkedList<Item>) items.clone(), comparator);
+        var result = BubbleSort.sort(items, comparator);
 
         return result;
-    }
-
-    public LinkedList<Item> sortBy() {
-        return this.sortBy(SortBy.Brand);
     }
 
     public void safelyLoadData()
@@ -116,6 +196,12 @@ class Inventory {
             System.out.println("An exception occurred while loading data: " + e.toString());
         }
     }
+
+    public void printList() {
+        for(var item : items) {
+            System.out.println(item);
+        }
+    }
 }
 
 class BubbleSort {
@@ -135,14 +221,24 @@ class BubbleSort {
 }
 
 class LinearSearch {
-    public static Item findByEngineNumber(LinkedList<Item> a, String engineNumber) throws InvalidParameterException {
+    public static Item findByEngineNumber(LinkedList<Item> a, String engineNumber) throws InvalidEngineNumberParameterException {
         for (var item : a) {
             if (item.engineNumber.equalsIgnoreCase(engineNumber)) {
                 return item;
             }
         }
 
-        throw new InvalidParameterException("EngineNumber of " + engineNumber + " does not exist");
+        throw new InvalidEngineNumberParameterException();
+    }
+
+    public static boolean containsByEngineNumber(LinkedList<Item> a, String engineNumber) {
+        try {
+            var item = findByEngineNumber(a, engineNumber);
+            return item != null;
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 }
 
@@ -182,7 +278,7 @@ enum SortBy {
 enum StockLabel {
     Old, New;
 
-    public static StockLabel parse(String val) throws InvalidParameterException {
+    public static StockLabel parse(String val) throws InvalidStockLabelStringParameterException {
         if (val.equalsIgnoreCase("old")) {
             return StockLabel.Old;
         }
@@ -190,7 +286,7 @@ enum StockLabel {
             return StockLabel.New;
         }
         else {
-            throw new InvalidParameterException();
+            throw new InvalidStockLabelStringParameterException();
         }
     }
 }
@@ -198,15 +294,19 @@ enum StockLabel {
 enum Status {
     Sold, OnHand;
 
-    public static Status parse(String val) throws InvalidParameterException {
+    public static Status parse(String val) throws InvalidStatusStringParameterException {
         if (val.equalsIgnoreCase("sold")) {
             return Status.Sold;
         }
-        else if (val.equalsIgnoreCase("on-hand")) {
+        else if (val.equalsIgnoreCase("on-hand") || val.equalsIgnoreCase("onhand")) {
             return Status.OnHand;
         }
         else {
-            throw new InvalidParameterException();
+            throw new InvalidStatusStringParameterException();
         }
     }
 }
+
+class InvalidEngineNumberParameterException extends InvalidParameterException {}
+class InvalidStockLabelStringParameterException extends InvalidParameterException {}
+class InvalidStatusStringParameterException extends InvalidParameterException {}
