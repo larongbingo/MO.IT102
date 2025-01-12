@@ -33,14 +33,14 @@ public class Week3BubbleSort {
      * <p>
      * Comments - An array of integers
      * <p>
-     * <code>
+     * <pre> {@code
      * func bubbleSort(A)
      *      for i = 0 .. A.length
      *          for j = 0 .. (A.length - 1)
      *              if A[j] > A[j+1]
      *                  Swap A[j] and A[j+1]
      *      return A
-     * </code>
+     * }</pre>
      */
     public static int[] bubbleSort(int[] arr) {
         for(int i = 0; i < arr.length; i++) {

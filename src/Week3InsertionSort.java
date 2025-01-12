@@ -39,7 +39,7 @@ public class Week3InsertionSort {
      * <p>
      * Comments - An array of integers
      * <p>
-     * <code>
+     * <pre>{@code
      * func insertionSort(A)
      *      i = 1
      *      while i < A.length
@@ -47,9 +47,9 @@ public class Week3InsertionSort {
      *          while j > 0 and A[j - 1] > A[j]
      *              Swap A[j] and A[j+1]
      *              j--
-     *          i = i + 1
+     *          i++
      *      return A
-     * </code>
+     * }</pre>
      */
     public static int[] insertionSort(int[] arr) {
         var i = 1;
