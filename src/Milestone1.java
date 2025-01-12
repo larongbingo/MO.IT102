@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileWriter;
 import java.security.InvalidParameterException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -15,7 +16,7 @@ public class Milestone1 {
         items.safelyLoadData();
         
         while (true) {
-            System.out.print("Enter command {Add, Remove, Update, SortByBrand, SortByDate, Print, (Q)uit}: ");
+            System.out.print("Enter command {Add, Remove, Update, SortByBrand, SortByDate, Print, Save, (Q)uit}: ");
             var command = scanner.next();
             command = command.toLowerCase();
 
@@ -40,6 +41,9 @@ public class Milestone1 {
                     items.sortBy(SortBy.DateEntered);
                     items.printList();
                     break;
+                case "save":
+                    saveItemsProc();
+                    break;
                 case "quit":
                 case "q":
                     System.out.println("[INVENTORY] Exiting");
@@ -47,6 +51,23 @@ public class Milestone1 {
                 default:
                     System.out.println("[INVENTORY] Invalid Command");
             }
+        }
+    }
+
+    private static void saveItemsProc() {
+        try {
+            System.out.print("Enter filename: ");
+            var fileName = scanner.next();
+
+            if (fileName.isEmpty()) {
+                System.out.println("[INVENTORY] File name can't be empty");
+                return;
+            }
+
+            items.safelySaveData(fileName);
+        }
+        catch (Exception e) {
+            System.out.println("[INVENTORY] An error occurred: " + e);
         }
     }
 
@@ -189,11 +210,33 @@ class Inventory {
                 items.add(item);
             }
 
-            System.out.println("Successfully loaded all data");
+            System.out.println("[INVENTORY] Successfully loaded all data");
 
         }
         catch (Exception e) {
             System.out.println("An exception occurred while loading data: " + e.toString());
+        }
+    }
+
+    public void safelySaveData(String fileName)
+    {
+        var file = new File(fileName);
+
+        if (file.exists()) {
+            System.out.println("File already exists");
+            return;
+        }
+
+        try (var fileWriter = new FileWriter(file)) {
+            for (var item : items) {
+                fileWriter.write(item.toCsv() + "\n");
+            }
+
+            fileWriter.close();
+
+            System.out.println("Successfully saved the file");
+        } catch (Exception e) {
+            System.out.println("An exception occurred while saving data: " + e.toString());
         }
     }
 
@@ -267,6 +310,10 @@ class Item {
                 ", engineNumber='" + engineNumber + '\'' +
                 ", isOnHand=" + status +
                 '}';
+    }
+
+    public String toCsv() {
+        return String.format("%s,%s,%s,%s,%s", dateEntered, stockLabel, brand, engineNumber, status);
     }
 }
 
