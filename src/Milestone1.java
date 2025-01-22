@@ -186,7 +186,7 @@ class Inventory {
 
         switch (sortBy) {
             case DateEntered -> comparator = Comparator.comparing((Item o) -> o.dateEntered);
-            case Brand -> comparator = Comparator.comparing((Item o) -> o.brand);
+            case Brand -> comparator = Comparator.comparing((Item o) -> o.brand, String::compareToIgnoreCase);
         }
 
         var result = BubbleSort.sort(items, comparator);
