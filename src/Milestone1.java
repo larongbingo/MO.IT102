@@ -3,10 +3,7 @@ import java.io.FileWriter;
 import java.security.InvalidParameterException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 
 public class Milestone1 {
     private static Scanner scanner = new Scanner(System.in);
@@ -22,7 +19,7 @@ public class Milestone1 {
 
             switch (command) {
                 case "add": 
-                    addItemProc(); 
+                    addItemProc();
                     break;
                 case "remove":
                     removeItemProc();
@@ -71,6 +68,7 @@ public class Milestone1 {
         }
     }
 
+    /// Procedure to update an Item
     private static void updateItemProc() {
         try {
             System.out.print("Enter Engine Number: ");
@@ -80,7 +78,7 @@ public class Milestone1 {
 
             System.out.print(String.format("New Value for the Brand; Leave blank if current is ok - Current {%s} : ", itemToBeUpdated.brand));
             var newBrand = scanner.next();
-            if (!newBrand.isEmpty()) {
+            if (!newBrand.isEmpty() && !Objects.equals(itemToBeUpdated.brand, newBrand)) {
                 itemToBeUpdated.brand = newBrand;
             }
 
@@ -107,6 +105,7 @@ public class Milestone1 {
         }
     }
 
+    /// Procedure to remove Item
     private static void removeItemProc() {
         try {
             System.out.print("Engine Number of the item to be removed: ");
@@ -128,6 +127,7 @@ public class Milestone1 {
         }
     }
 
+    /// Procedure to insert Item
     private static void addItemProc() {
         try {
             System.out.print("Name: ");
@@ -170,6 +170,7 @@ class Inventory {
     public LinkedList<Item> items = new LinkedList<>();
 
     public boolean add(Item item) {
+        // Assurance that all Engine Number is unique
         if (LinearSearch.containsByEngineNumber(items, item.engineNumber)) {
             return false;
         }
@@ -181,9 +182,9 @@ class Inventory {
         return items.remove(item);
     }
 
+    /// Sorts the LinkedList based on the selected property to sort
     public LinkedList<Item> sortBy(SortBy sortBy) {
         Comparator<Item> comparator = null;
-
         switch (sortBy) {
             case DateEntered -> comparator = Comparator.comparing((Item o) -> o.dateEntered);
             case Brand -> comparator = Comparator.comparing((Item o) -> o.brand, String::compareToIgnoreCase);
@@ -194,6 +195,7 @@ class Inventory {
         return result;
     }
 
+    /// Loads the data into the LinkedList
     public void safelyLoadData()
     {
         var dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy", Locale.US);
@@ -218,6 +220,7 @@ class Inventory {
         }
     }
 
+    /// Saves the data in the LinkedList into a given filename
     public void safelySaveData(String fileName)
     {
         var file = new File(fileName);
@@ -248,6 +251,7 @@ class Inventory {
 }
 
 class BubbleSort {
+    /// A simple Bubble Sort but modified to allow usage of the Comparator class
     public static LinkedList<Item> sort(LinkedList<Item> a, Comparator<Item> c) {
         for(int i = 0; i < a.size(); i++) {
             for(int j = 0; j < a.size() - 1; j++) {
@@ -264,6 +268,9 @@ class BubbleSort {
 }
 
 class LinearSearch {
+    /// Finds the Item using the EngineNumber.
+    ///
+    /// Throws an exception if it doesn't find a first matching
     public static Item findByEngineNumber(LinkedList<Item> a, String engineNumber) throws InvalidEngineNumberParameterException {
         for (var item : a) {
             if (item.engineNumber.equalsIgnoreCase(engineNumber)) {
@@ -274,6 +281,7 @@ class LinearSearch {
         throw new InvalidEngineNumberParameterException();
     }
 
+    /// Similar to findByEngineNumber but only returns a boolean
     public static boolean containsByEngineNumber(LinkedList<Item> a, String engineNumber) {
         try {
             var item = findByEngineNumber(a, engineNumber);
@@ -325,6 +333,9 @@ enum SortBy {
 enum StockLabel {
     Old, New;
 
+    /// Parses the string into a valid StockLabel enum
+    ///
+    /// Throws an exception if the string is not valid
     public static StockLabel parse(String val) throws InvalidStockLabelStringParameterException {
         if (val.equalsIgnoreCase("old")) {
             return StockLabel.Old;
@@ -341,6 +352,9 @@ enum StockLabel {
 enum Status {
     Sold, OnHand;
 
+    ///  Parses the string into a valid Status enum
+    ///
+    /// Throws an exception if the string is not valid
     public static Status parse(String val) throws InvalidStatusStringParameterException {
         if (val.equalsIgnoreCase("sold")) {
             return Status.Sold;
