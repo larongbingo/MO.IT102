@@ -14,14 +14,15 @@ public class Milestone2 {
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
+
+        // Fetch the data from the CSV file
         if (inventory.loadData()) {
             System.out.println("[MS2 INVENTORY] Successfully loaded data");
         } else {
             System.out.println("[MS2 INVENTORY] Failed to load data");
         }
+
         while (true) {
-            
-            
             System.out.print("Enter command {Add, Remove, Update, PrintSortByBrand, PrintSortByDate, Save, (Q)uit}: ");
             var command = scanner.nextLine();
             command = command.toLowerCase();
@@ -87,9 +88,12 @@ public class Milestone2 {
                 parsedStatus
             );
 
-            inventory.add(newItem);
-
-            System.out.println("[MS2 INVENTORY] Succesfully added new stock - " + newItem);
+            var result = inventory.add(newItem);
+            if (result) {
+                System.out.println("[MS2 INVENTORY] Succesfully added new stock - " + newItem);
+            } else {
+                System.out.println("[MS2 INVENTORY] Engine Number already taken");
+            }
         } catch(Exception ex) {
             System.out.println("[MS2 INVENTORY] An error occurred: "  + ex.toString());
         }
@@ -160,6 +164,7 @@ class InventoryMS2 {
     public HashMap<String, Item> items =  new HashMap<>();
 
     public boolean add(Item item) {
+        // Confirm that the key/engine number is unique
         if (items.containsKey(item.engineNumber)) {
             return false;
         }
@@ -179,19 +184,23 @@ class InventoryMS2 {
     }
 
     public void printSorted(SortBy sortBy) {
+        // Allows to change what property is order at runtime
         Comparator<Item> comparator = null;
         switch (sortBy) {
             case DateEntered -> comparator = Comparator.comparing((Item o) -> o.dateEntered);
             case Brand -> comparator = Comparator.comparing((Item o) -> o.brand, String::compareToIgnoreCase);
         }
 
+        // Merge Sort
         var result = MergeSortMS2.sort(new ArrayList<Item>(items.values()), comparator);
 
+        // Print all items
         for (Item item : result) {
             System.out.println(item);
         }
     }
 
+    /// Fetches any data in the CSV file
     public boolean loadData() {
         var dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy", Locale.US);
         try (var scanner = new Scanner(new File("MotorPH_Inventory_Data.csv"))) {
@@ -237,6 +246,8 @@ class InventoryMS2 {
     }
 }
 
+/// Implemented the out of place Merge Sort for code simplicity, but affects
+/// performance due to mallocs
 class MergeSortMS2 {
     public static ArrayList<Item> sort(ArrayList<Item> a, Comparator<Item> c) {
         int size = a.size();
@@ -245,6 +256,7 @@ class MergeSortMS2 {
             return a;
         }
 
+        // Split the array in half
         var mid = size/2;
         var left = new ArrayList<Item>();
         var right = new ArrayList<Item>();
