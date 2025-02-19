@@ -48,12 +48,12 @@ public class MS1MS2Comparison {
         BubbleSortTests();
         MergeSortTests();
 
-        System.out.println("Average Runtimes in ms - Same Random Items - Executed "+RUN+" Times - Bubble Sort");
+        System.out.println("Average Runtimes in ns - Same Random Items - Executed "+RUN+" Times - Bubble Sort");
         System.out.println(SMALL + " ITEMS = " + smallBSRuntimes.stream().mapToLong(Long::longValue).sum() / RUN);
         System.out.println(MEDIUM + " ITEMS = " + mediumBSRuntimes.stream().mapToLong(Long::longValue).sum() / RUN);
         System.out.println(LARGE + " ITEMS = " + largeBSRuntimes.stream().mapToLong(Long::longValue).sum() / RUN);
 
-        System.out.println("Average Runtimes in ms - Same Random Items - Executed "+RUN+" Times - Merge Sort");
+        System.out.println("Average Runtimes in ns - Same Random Items - Executed "+RUN+" Times - Merge Sort");
         System.out.println(SMALL + " ITEMS = " + smallMSRuntimes.stream().mapToLong(Long::longValue).sum() / RUN);
         System.out.println(MEDIUM + " ITEMS = " + mediumMSRuntimes.stream().mapToLong(Long::longValue).sum() / RUN);
         System.out.println(LARGE + " ITEMS = " + largeMSRuntimes.stream().mapToLong(Long::longValue).sum() / RUN);
