@@ -1,12 +1,9 @@
 import java.io.File;
 import java.io.FileWriter;
+import java.security.InvalidParameterException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 
 // Note: some of the class definitions is in Milestone1.java
 public class Milestone2 {
@@ -23,7 +20,7 @@ public class Milestone2 {
         }
 
         while (true) {
-            System.out.print("Enter command {Add, Remove, Update, PrintSortByBrand, PrintSortByDate, Save, (Q)uit}: ");
+            System.out.print("Enter command {Add, Remove, Update, PrintSortByBrand, PrintSortByDate, StatusFilter, BrandFilter, StockLabelFilter, ResetFilters, Save, (Q)uit}: ");
             var command = scanner.nextLine();
             command = command.toLowerCase();
 
@@ -45,6 +42,20 @@ public class Milestone2 {
                     break;
                 case "printsortbydate":
                     inventory.printSorted(SortBy.DateEntered);
+                    break;
+                case "statusfilter":
+                    setStatusFilter();
+                    break;
+                case "brandfilter":
+                    setBrandFilter();
+                    break;
+                case "stocklabelfilter":
+                    setStockLabelFilter();
+                    break;
+                case "resetfilters":
+                    LinearSearchMS2.brand = "";
+                    LinearSearchMS2.stockLabelFilter = StockLabelFilter.None;
+                    LinearSearchMS2.statusFilter = StatusFilter.None;
                     break;
                 
                 case "save":
@@ -159,6 +170,8 @@ public class Milestone2 {
     /// Steps to remove a Stock from the Inventory
     private static void removeItemProcedure() {
         try {
+            System.out.println("[MS2 INVENTORY] Removing an item");
+
             // Fetch the engine number
             System.out.print("Engine Number of the item to be removed: ");
             var engineNumber = scanner.nextLine();
@@ -176,6 +189,50 @@ public class Milestone2 {
         }
         catch (Exception e) {
             System.out.println("Engine Number is not valid");
+        }
+    }
+
+    private static void setStatusFilter() {
+        try {
+            System.out.println("[MS2 INVENTORY] Setting Status Filter");
+
+            System.out.print("Enter Filter {0 - None, 1 - Sold, 2 - OnHand}: ");
+            var filterString = scanner.nextLine();
+            LinearSearchMS2.statusFilter = StatusFilter.parse(filterString);
+
+            System.out.println("[MS2 INVENTORY] Status Filter set");
+        }
+        catch (Exception e) {
+            System.out.println("[MS2 INVENTORY] Invalid input");
+        }
+    }
+
+    private static void setStockLabelFilter() {
+        try {
+            System.out.println("[MS2 INVENTORY] Setting Stock Label Filter");
+
+            System.out.print("Enter Filter {0 - None, 1 - Old, 2 - New}: ");
+            var filterString = scanner.nextLine();
+            LinearSearchMS2.stockLabelFilter = StockLabelFilter.parse(filterString);
+
+            System.out.println("[MS2 INVENTORY] Stock Label Filter set");
+        }
+        catch (Exception e) {
+            System.out.println("[MS2 INVENTORY] Invalid input");
+        }
+    }
+
+    private static void setBrandFilter() {
+        try {
+            System.out.println("[MS2 INVENTORY] Setting Brand Filter");
+
+            System.out.print("Enter Brand: ");
+            LinearSearchMS2.brand = scanner.nextLine();
+
+            System.out.println("[MS2 INVENTORY] Brand Filter Set");
+        }
+        catch (Exception e) {
+            System.out.println("[MS2 INVENTORY] An error occurred");
         }
     }
 }
@@ -211,8 +268,13 @@ class InventoryMS2 {
             case Brand -> comparator = Comparator.comparing((Item o) -> o.brand, String::compareToIgnoreCase);
         }
 
+        // Filter anything that matches the set filter options
+        var filtered = LinearSearchMS2.filter(new ArrayList<Item>(items.values()));
+
         // Merge Sort
-        var result = MergeSortMS2.sort(new ArrayList<Item>(items.values()), comparator);
+        var result = MergeSortMS2.sort(filtered, comparator);
+
+        System.out.println("Filtered by StockLabel = " + LinearSearchMS2.stockLabelFilter + ", Status = " + LinearSearchMS2.statusFilter + ", Brand = " + LinearSearchMS2.brand);
 
         // Print all items
         for (Item item : result) {
@@ -336,3 +398,121 @@ class MergeSortMS2 {
         return merged;
     }
 }
+
+/// Filters all Items linearly
+class LinearSearchMS2 {
+    public static String brand = "";
+    public static StatusFilter statusFilter = StatusFilter.None;
+    public static StockLabelFilter stockLabelFilter = StockLabelFilter.None;
+
+    /// Possibly inefficient but it has the simplest code to filter out that doesn't match
+    /// the criteria
+    public static ArrayList<Item> filter(ArrayList<Item> items) {
+        var firstFilter = filterByBrand(items);
+        var secondFilter = filterByStockLabel(firstFilter);
+        var thirdFilter = filterByStatus(secondFilter);
+
+        return thirdFilter;
+    }
+
+    private static ArrayList<Item> filterByBrand(ArrayList<Item> items) {
+        if (Objects.equals(brand, "")) {
+            return items;
+        }
+
+        var filtered = new ArrayList<Item>();
+
+        for(var item : items) {
+            if (item.brand.toLowerCase().contains(brand.toLowerCase())) {
+                filtered.add(item);
+            }
+        }
+
+        return filtered;
+    }
+
+    private static ArrayList<Item> filterByStockLabel(ArrayList<Item> items) {
+        if (stockLabelFilter == StockLabelFilter.None) {
+            return items;
+        }
+
+        var filtered = new ArrayList<Item>();
+
+        var stockLabel = StockLabelFilter.convert(stockLabelFilter);
+
+        for (var item : items) {
+            if (item.stockLabel == stockLabel) {
+                filtered.add(item);
+            }
+        }
+
+        return filtered;
+    }
+
+    private static ArrayList<Item> filterByStatus(ArrayList<Item> items) {
+        if (statusFilter == StatusFilter.None) {
+            return items;
+        }
+
+        var filtered = new ArrayList<Item>();
+
+        var status = StatusFilter.convert(statusFilter);
+
+        for(var item : items) {
+            if (item.status == status) {
+                filtered.add(item);
+            }
+        }
+
+        return filtered;
+    }
+}
+
+enum StatusFilter {
+    None,
+    Sold,
+    OnHand;
+
+    public static StatusFilter parse(String str) throws InvalidStatusFilterParameterException {
+        return switch (str) {
+            case "0" -> StatusFilter.None;
+            case "1" -> StatusFilter.Sold;
+            case "2" -> StatusFilter.OnHand;
+            default -> throw new InvalidStatusFilterParameterException();
+        };
+    }
+
+    public static Status convert(StatusFilter filter) {
+        return switch(filter) {
+            case StatusFilter.Sold -> Status.Sold;
+            case StatusFilter.OnHand -> Status.OnHand;
+            default -> throw new InvalidStatusFilterParameterException();
+        };
+    }
+}
+
+enum StockLabelFilter {
+    None,
+    Old,
+    New;
+
+    public static StockLabelFilter parse(String str) throws InvalidStockLabelFilterParameterException {
+        return switch (str) {
+            case "0" -> StockLabelFilter.None;
+            case "1" -> StockLabelFilter.Old;
+            case "2" -> StockLabelFilter.New;
+            default -> throw new InvalidStockLabelStringParameterException();
+        };
+    }
+
+    public static StockLabel convert(StockLabelFilter filter) throws InvalidStockLabelFilterParameterException {
+        return switch (filter) {
+            case StockLabelFilter.Old -> StockLabel.Old;
+            case StockLabelFilter.New -> StockLabel.New;
+            default -> throw new InvalidStockLabelFilterParameterException();
+        };
+    }
+}
+
+class InvalidStatusFilterParameterException extends InvalidParameterException {}
+class InvalidStockLabelFilterParameterException extends InvalidParameterException {}
