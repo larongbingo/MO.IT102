@@ -63,23 +63,32 @@ public class Milestone2 {
         }
     }
 
+    /// Steps to add a new stock
     private static void addProcedure() {
         try {
             System.out.println("[MS2 INVENTORY] Adding a new Stock");
+
+            // Fetch the Brand Name of the Stock
             System.out.print("[MS2 INVENTORY] Name: ");
             var name = scanner.nextLine();
 
+            // Fetch the Engine Number of the Stock
+            // This will serve as its Primary Id
             System.out.print("[MS2 INVENTORY] Engine Number: ");
             var engineNumber = scanner.nextLine();
 
+            // Fetch and parse the Stock Label 
             System.out.print("[MS2 INVENTORY] Stock Label {New, Old}: ");
             var stockLabel = scanner.nextLine();
             var parsedStockLabel = StockLabel.parse(stockLabel);
 
+            // Fetch and parse the Status
             System.out.print("[MS2 INVENTORY] Status {OnHand, Sold}: ");
             var status = scanner.nextLine();
             var parsedStatus = Status.parse(status);
 
+            // Create the new Stock
+            // The Date is set to today since it was created just now
             var newItem = new Item(
                 LocalDate.now(),
                 parsedStockLabel,
@@ -88,6 +97,7 @@ public class Milestone2 {
                 parsedStatus
             );
 
+            // Display if the stock is added or not
             var result = inventory.add(newItem);
             if (result) {
                 System.out.println("[MS2 INVENTORY] Succesfully added new stock - " + newItem);
@@ -99,54 +109,64 @@ public class Milestone2 {
         }
     }
 
+    /// Steps to update a Stock from the Inventory
     private static void updateItemProcedure() {
         try {
             System.out.print("[MS2 INVENTORY] Updating stock");
+
+            // Fetch the engine number
             System.out.print("Enter Engine Number: ");
             var engineNumber = scanner.nextLine();
             
+            // Check if the engine number is valid
             var itemToBeUpdated = inventory.get(engineNumber);
             if (itemToBeUpdated == null) {
                 System.out.println("[MS2 INVENTORY] Invalid Engine Number");
                 return;
             }
 
+            // Fetch the updated value for the Stock's Brand
             System.out.print(String.format("[MS2 INVENTORY] New Value for the Brand; Leave blank if current is ok - Current {%s} : ", itemToBeUpdated.brand));
             var newBrand = scanner.nextLine();
             if (!newBrand.isEmpty()) {
                 itemToBeUpdated.brand = newBrand;
             }
 
+            // Fetch the updated value for the Stock's Status
             System.out.print(String.format("[MS2 INVENTORY] New Value for the Status {Sold, OnHand}; Leave blank if current is ok - Current {%s} : ", itemToBeUpdated.brand));
             var newStatus = scanner.nextLine();
             if (!newStatus.isEmpty()) {
                 itemToBeUpdated.status = Status.parse(newStatus);
             }
 
+            // Fetch the updated value for the Stock's StockLabel
             System.out.print(String.format("[MS2 INVENTORY] New Value for the StockLabel {New, Old}; Leave blank if current is ok - Current {%s} : ", itemToBeUpdated.brand));
             var newStock = scanner.nextLine();
             if (!newStock.isEmpty()) {
                 itemToBeUpdated.stockLabel = StockLabel.parse(newStock);
             }
         }
-        catch (InvalidEngineNumberParameterException engineNumberExc) {
-            System.out.println("[MS2 INVENTORY] EngineNumber not found");
-        }
         catch (InvalidStatusStringParameterException statusExc) {
+            // Failed to parse the string due to invalid string input
             System.out.println("[MS2 INVENTORY] Invalid input. The following are the only valid {OnHand, Sold}");
         }
         catch (InvalidStockLabelStringParameterException stockExc) {
+            // Failed to parse the string due to invalid string input
             System.out.println("[MS2 INVENTORY] Invalid input. The following are the only valid {Old, New}");
         }
     }
 
+    /// Steps to remove a Stock from the Inventory
     private static void removeItemProcedure() {
         try {
+            // Fetch the engine number
             System.out.print("Engine Number of the item to be removed: ");
             var engineNumber = scanner.nextLine();
 
+            // Try removing the item
             var result = inventory.remove(engineNumber);
 
+            // Display result
             if (result) {
                 System.out.println("[MS2 INVENTORY] Item has been removed");
             }
@@ -202,17 +222,29 @@ class InventoryMS2 {
 
     /// Fetches any data in the CSV file
     public boolean loadData() {
+        // Date Formatter
         var dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy", Locale.US);
+        
+        // Scanner to read individual lines in the CSV file
         try (var scanner = new Scanner(new File("MotorPH_Inventory_Data.csv"))) {
+            
+            // Iterate while it still has Lines it hasn't read
             while (scanner.hasNextLine()) {
+                // Fetch the line
                 var values = scanner.nextLine();
+
+                // Split the CSV string
                 var splitValues = values.split(",");
+                
+                // Parse and instantiate the object
                 var item = new Item(
                         LocalDate.parse(splitValues[0], dateFormatter),
                         StockLabel.parse(splitValues[1]),
                         splitValues[2],
                         splitValues[3],
                         Status.parse(splitValues[4]));
+
+                // Load into the List
                 this.add(item);
             }
 
@@ -223,14 +255,17 @@ class InventoryMS2 {
         }
     }
 
+    /// List into a CSV file
     public boolean saveData(String fileName) {
         var file = new File(fileName);
 
+        // Prevent overwriting existing item
         if (file.exists()) {
             System.out.println("File already exists");
             return false;
         }
 
+        // Print all items into the file
         try (var fileWriter = new FileWriter(file)) {
             var values = items.values();
             for (var item : values) {
@@ -268,9 +303,11 @@ class MergeSortMS2 {
             }
         }
 
+        // Recursively split and sort both list halves
         left = sort(left, c);
         right = sort(right, c);
 
+        // Merge both lists
         return merge(left, right, c);
     }
 
@@ -278,6 +315,7 @@ class MergeSortMS2 {
         var merged = new ArrayList<Item>();
 
         while (!a.isEmpty() && !b.isEmpty()) {
+            // Move the current largest on both lists
             if (c.compare(a.getFirst(), b.getFirst()) > 0) {
                 merged.add(b.removeFirst());
             } else {
@@ -285,10 +323,12 @@ class MergeSortMS2 {
             }    
         }
 
+        // Move the remaining items of list A
         while (!a.isEmpty()) {
             merged.add(a.removeFirst());
         }
 
+        // Move the remaining items of list B
         while (!b.isEmpty()) {
             merged.add(b.removeFirst());
         }
